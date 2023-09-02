@@ -167,7 +167,11 @@ local function try_handle(self, method, ...)
     local handle = self.handle
     local f = handle and handle[method]
     if f then
-        f(self.id, ...)
+        -- f(self.id, ...)
+        local ok, err = xpcall(f, debug.traceback, self.id, ...)
+        if not(ok) then
+            skynet.error(err)
+        end
     end
 end
 
