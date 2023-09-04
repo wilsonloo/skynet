@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <pthread.h>
 
 #if defined(__APPLE__)
 #include <mach/task.h>
@@ -24,6 +25,7 @@
 #define MEMORY_WARNING_REPORT (1024 * 1024 * 32)
 
 struct snlua {
+	void * profile_context; // place first field to alias with struct snlua define of https://github.com/wilsonloo/luaprofile
 	lua_State * L;
 	struct skynet_context * ctx;
 	size_t mem;
@@ -60,11 +62,48 @@ codecache(lua_State *L) {
 
 #endif
 
+#define SNLUA_KEY "snlua_context"
+static pthread_once_t g_cache_init;
+static pthread_key_t g_cache_co;
+static pthread_key_t g_cache_context;
+
+static void
+cache_init(){
+	pthread_key_create(&g_cache_co, NULL);
+	pthread_key_create(&g_cache_context, NULL);
+}
+
+static void* 
+get_cache_context(lua_State* L){
+	lua_State* co = (lua_State*)(pthread_getspecific(g_cache_co));
+	if(co != L){
+		return NULL;
+	}
+	return (void*)pthread_getspecific(g_cache_context);
+}
+
+static void
+set_cache_context(lua_State* co, void* context){
+	pthread_setspecific(g_cache_co, (const void*)co);
+	pthread_setspecific(g_cache_context, (const void*)context);
+}
+
+static inline struct snlua*
+get_snlua(lua_State* L){
+	void* addr = get_cache_context(L);
+	if(addr){
+		return (struct snlua*)addr;
+	}
+	lua_rawgetp(L, LUA_REGISTRYINDEX, SNLUA_KEY);
+	addr = (struct snlua*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	set_cache_context(L, addr);
+	return addr;
+}
+
 static void
 signal_hook(lua_State *L, lua_Debug *ar) {
-	void *ud = NULL;
-	lua_getallocf(L, &ud);
-	struct snlua *l = (struct snlua *)ud;
+	struct snlua *l = get_snlua(L);
 
 	lua_sethook (L, NULL, 0, 0);
 	if (ATOM_LOAD(&l->trap)) {
@@ -83,9 +122,8 @@ switchL(lua_State *L, struct snlua *l) {
 
 static int
 lua_resumeX(lua_State *L, lua_State *from, int nargs, int *nresults) {
-	void *ud = NULL;
-	lua_getallocf(L, &ud);
-	struct snlua *l = (struct snlua *)ud;
+	struct snlua *l = get_snlua(L);
+
 	switchL(L, l);
 	int err = lua_resume(L, from, nargs, nresults);
 	if (ATOM_LOAD(&l->trap)) {
@@ -502,11 +540,16 @@ struct snlua *
 snlua_create(void) {
 	struct snlua * l = skynet_malloc(sizeof(*l));
 	memset(l,0,sizeof(*l));
+	l->profile_context = NULL;
 	l->mem_report = MEMORY_WARNING_REPORT;
 	l->mem_limit = 0;
 	l->L = lua_newstate(lalloc, l);
 	l->activeL = NULL;
 	ATOM_INIT(&l->trap , 0);
+
+	lua_pushlightuserdata(l->L, l);
+	lua_rawsetp(l->L, LUA_REGISTRYINDEX, SNLUA_KEY);
+	pthread_once(&g_cache_init, cache_init);
 	return l;
 }
 
