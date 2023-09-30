@@ -415,6 +415,13 @@ function COMMANDX.sys_shutdown(cmd, wait_sec)
 	return table.pack(skynet.call(address, "lua", 'sys_shutdown', scret_key, wait_sec))
 end
 
+function COMMANDX.sys_reload_res(cmd)
+	local branch = cmd[2]
+	local commit = cmd[3]
+	local address = "monitor"
+	return table.pack(skynet.call(address, "lua", 'sys_reload_res', branch, commit))
+end
+
 local function bytes(size)
 	if size == nil or size == 0 then
 		return
