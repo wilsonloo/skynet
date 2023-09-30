@@ -405,8 +405,14 @@ function COMMANDX.call(cmd)
 	if not args[1] then
 		error(args[2])
 	end
-	local rets = table.pack(skynet.call(address, "lua", table.unpack(args, 2, args.n)))
-	return rets
+	return table.pack(skynet.call(address, "lua", table.unpack(args, 2, args.n)))
+end
+
+function COMMANDX.sys_shutdown(cmd, wait_sec)
+	local scret_key = cmd[2]
+	local wait_sec = cmd[3]
+	local address = "monitor"
+	return table.pack(skynet.call(address, "lua", 'sys_shutdown', scret_key, wait_sec))
 end
 
 local function bytes(size)

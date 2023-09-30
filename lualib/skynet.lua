@@ -50,7 +50,8 @@ skynet._proto = proto
 function skynet.register_protocol(class)
 	local name = class.name
 	local id = class.id
-	assert(proto[name] == nil and proto[id] == nil)
+	assert(proto[name] == nil, name)
+	assert(proto[id] == nil, id)
 	assert(type(name) == "string" and type(id) == "number" and id >=0 and id <=255)
 	proto[name] = class
 	proto[id] = class
@@ -605,6 +606,7 @@ function skynet.call(addr, typename, ...)
 	end
 
 	local p = proto[typename]
+	assert(p, typename..skynet.self())
 	local session = c.send(addr, p.id , nil , p.pack(...))
 	if session == nil then
 		error("call to invalid address " .. skynet.address(addr))
