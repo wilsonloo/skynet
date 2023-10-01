@@ -408,6 +408,11 @@ end
 
 mongo_collection.safe_insert_many = mongo_collection.safe_batch_insert
 
+function mongo_collection:orm_insert(doc)
+	local r = self.database:runCommand("insert", self.name, "documents", {doc})
+	return werror(r)
+end
+
 function mongo_collection:update(query,update,upsert,multi)
 	self.database:send_command("update", self.name, "updates", {bson_encode({
 		q = query,
