@@ -466,6 +466,11 @@ function mongo_collection:raw_safe_update(update)
 	return werror(r)
 end
 
+function mongo_collection:orm_update(update)
+	local r = self.database:runCommand("update", self.name, "updates", {update})
+	return werror(r)
+end
+
 function mongo_collection:delete(query, single)
 	self.database:send_command("delete", self.name, "deletes", {bson_encode({
 		q = query,
