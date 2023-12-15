@@ -125,6 +125,23 @@ main(int argc, char *argv[]) {
 		return 1;
 	}
 
+	// copy extra params
+	int sz = 0;
+	for(int k = 2; k < argc; ++k){
+		sz = sz + strlen(argv[k]) + 1;
+	}
+	char extra_args[sz+1];
+	int pos = 0;
+	for(int k = 2; k < argc; ++k){
+		strcpy(&extra_args[pos], &argv[k][0]);
+		pos += strlen(argv[k]);
+		if(k < argc-1){
+			extra_args[pos] = ' ';
+		}
+		++pos;
+	}
+	extra_args[pos] = '\0';
+
 	skynet_globalinit();
 	skynet_env_init();
 
@@ -160,6 +177,7 @@ main(int argc, char *argv[]) {
 	config.logger = optstring("logger", NULL);
 	config.logservice = optstring("logservice", "logger");
 	config.profile = optboolean("profile", 1);
+	config.extra_args = optstring("extra_args", extra_args);
 
 	lua_close(L);
 
