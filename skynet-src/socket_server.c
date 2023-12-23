@@ -340,7 +340,16 @@ write_buffer_free(struct socket_server *ss, struct write_buffer *wb) {
 static void
 socket_keepalive(int fd) {
 	int keepalive = 1;
-	setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&keepalive , sizeof(keepalive));  
+	setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&keepalive , sizeof(keepalive)); 
+
+	int val = 600; 
+	setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, (void*)&val, sizeof(val)); 
+
+	val = 5; 
+	setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, (void*)&val, sizeof(val));
+	     
+	val = 3; 
+	setsockopt(fd, SOL_TCP, TCP_KEEPCNT, (void*)&val, sizeof(val));
 }
 
 static int
