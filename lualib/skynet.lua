@@ -13,6 +13,7 @@ local tinsert = table.insert
 local tpack = table.pack
 local tunpack = table.unpack
 local traceback = debug.traceback
+local string_gsub = string.gsub
 
 local cresume = coroutine.resume
 local running_thread = nil
@@ -970,6 +971,34 @@ end
 function skynet.stat(what)
 	return c.intcommand("STAT", what)
 end
+
+function skynet.mem(addr, timeout)
+	local map = skynet.call(".launcher", "lua", "MEM", timeout or 100)
+
+	if type(addr) == "number" then
+		addr = skynet.address(addr)
+	end
+	local info = map[addr]
+	local mem = string_gsub(info, "^(%d+.%d+)(.*)", "%1")
+	return tonumber(mem)
+end
+
+
+function skynet.mem_all(timeout)
+	local map = skynet.call(".launcher", "lua", "MEM", timeout or 100)
+	local ret = {}
+	for _, info in pairs(map) do
+		local name, mem
+		string_gsub(info, "^(%d+.%d+)(.*)Kb%s+%((.*)%)$", function(a, _, c)
+			mem = tonumber(a)
+		end)
+		if name and mem then
+			ret[name] = mem
+		end
+	end
+	return ret
+end
+
 
 function skynet.task(ret)
 	if ret == nil then
