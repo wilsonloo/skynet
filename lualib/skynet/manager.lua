@@ -62,6 +62,10 @@ function skynet.name(name, handle)
 	end
 end
 
+function skynet.query_name(handle)
+	return c.command("QUERY_NAME", handle)
+end
+
 local dispatch_message = skynet.dispatch_message
 
 function skynet.forward_type(map, start_func)

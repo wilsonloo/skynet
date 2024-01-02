@@ -234,6 +234,22 @@ _insert_name(struct handle_storage *s, const char * name, uint32_t handle) {
 	return result;
 }
 
+static const char* 
+_query_name(struct handle_storage *s, uint32_t handle){
+	int begin = 0;
+	int end = s->name_count - 1;
+	static const char* result = NULL;
+	while (begin<=end) {
+		int mid = (begin+end)/2;
+		struct handle_name *n = &s->name[mid];
+		if(n->handle == handle){
+			result = n->name;
+			break;
+		}
+	}
+	return result;
+}
+
 const char * 
 skynet_handle_namehandle(uint32_t handle, const char *name) {
 	rwlock_wlock(&H->lock);
@@ -242,6 +258,17 @@ skynet_handle_namehandle(uint32_t handle, const char *name) {
 
 	rwlock_wunlock(&H->lock);
 
+	return ret;
+}
+
+const char* 
+skynet_query_name(uint32_t handle){
+	rwlock_wlock(&H->lock);
+
+	const char *ret = _query_name(H, handle);
+
+	rwlock_wunlock(&H->lock);
+	
 	return ret;
 }
 

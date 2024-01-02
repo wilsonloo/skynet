@@ -451,6 +451,22 @@ cmd_name(struct skynet_context * context, const char * param) {
 	return NULL;
 }
 
+static const char*
+cmd_query_name(struct skynet_context * context, const char * param) {
+	int size = strlen(param);
+	char handle[size+1];
+	sscanf(param,"%s", handle);
+	if (handle[0] != ':') {
+		return NULL;
+	}
+	uint32_t handle_id = strtoul(handle+1, NULL, 16);
+	if (handle_id == 0) {
+		return NULL;
+	}
+	return skynet_query_name(handle_id);
+}
+
+
 static const char *
 cmd_exit(struct skynet_context * context, const char * param) {
 	handle_exit(context, 0);
@@ -648,6 +664,7 @@ static struct command_func cmd_funcs[] = {
 	{ "REG", cmd_reg },
 	{ "QUERY", cmd_query },
 	{ "NAME", cmd_name },
+	{ "QUERY_NAME", cmd_query_name },
 	{ "EXIT", cmd_exit },
 	{ "KILL", cmd_kill },
 	{ "LAUNCH", cmd_launch },

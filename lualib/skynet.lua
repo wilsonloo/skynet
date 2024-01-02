@@ -738,7 +738,7 @@ function skynet.dispatch(typename, func)
 end
 
 local function unknown_request(session, address, msg, sz, prototype)
-	skynet.error(string.format("Unknown request (%s): %s", prototype, c.tostring(msg,sz)))
+	print(string.format("Unknown request (%s): %s", prototype, c.tostring(msg,sz)))
 	error(string.format("Unknown session : %d from %x", session, address))
 end
 
@@ -749,7 +749,7 @@ function skynet.dispatch_unknown_request(unknown)
 end
 
 local function unknown_response(session, address, msg, sz)
-	skynet.error(string.format("Response message : %s" , c.tostring(msg,sz)))
+	print(string.format("Response message : %s" , c.tostring(msg,sz)))
 	error(string.format("Unknown session : %d from %x", session, address))
 end
 
